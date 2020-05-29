@@ -8,7 +8,8 @@ for f0Cache=0.3e9,2e9,0.425e9 do index=index+1 f0List[index]=f0Cache end
 fekoDir=[[E:\ZM\0Work\3simuModel\20200523GaussModel\]]
 stepDir = [[E:\ZM\0Work\3simuModel\20200416simlationModel\]]
 stepName=[[1pWedge(1000_100_500)]]
-gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve20200522211106.txt]]
+--gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve20200522211106.txt]]
+gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve20200529135327.txt]]
 -- stepName = "wedge45(1000_250_500)" --*.step
 -- stepName="test"
 count,nLoops,gaussIndex=0,#PAList*#f0List,0
