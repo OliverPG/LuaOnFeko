@@ -18,12 +18,12 @@ count,nLoops,gaussIndex=0,#PAList*#f0List,0
 --prj   project
 --PlaneWave     PW
 --frequency     frq
-time0=os.time()
 
 lineX=io.lines(gaussFormulaTxt)
 line1=lineX()
 timeScript0=os.time()
 while(line1) do
+time0=os.time()
 gaussIndex=gaussIndex+1
 count=0
 if(1) then --initialize feko and create model
@@ -174,7 +174,7 @@ end
 PwPprty.PolarisationAngle = PA
 PlaneWaveSource1:SetProperties(PwPprty)
 count=count+1
-fileName = stepName..line1..string.format("(Fre%gM_phi%dto%d_theta%dto%d_%s)",f0/(1e6),phi1,phi2,theta1,theta2,PAstr)
+fileName = stepName..line1..string.format("(Fre%gM_phi%dto%d_theta%dto%d_Pol%d)",f0/(1e6),phi1,phi2,theta1,theta2,PA)
 print(count.." of "..nLoops..string.format(" GaussIndex=%d ",gaussIndex)..fileName..".cfx :")
 print("\tTriangles: "..triangleCount)
 
@@ -220,7 +220,7 @@ end
 end
 time3=os.time()
 dtime03_sec=time3-time0
-print("Total time: "..string.format("%f min (%d sec or %f h)",dtime03_sec/60,dtime03_sec,dtime03_sec/3600))
+print("Current Model takes: "..string.format("%f min (%d sec or %f h)",dtime03_sec/60,dtime03_sec,dtime03_sec/3600))
 line1=lineX()
 end
 timeScript1=os.time()
