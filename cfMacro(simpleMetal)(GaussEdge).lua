@@ -1,3 +1,4 @@
+nParaProcess=4 --parallel processes
 phi1,phi2,phiStep=0,90,10
 theta1,theta2,thetaStep=0,90,10
 samplesN=(phi2-phi1)/phiStep*(theta2-theta1)/thetaStep
@@ -5,10 +6,11 @@ PAList={0,90}--PolarisationAngle,0 for VV, 90 for HH
 index,f0List=0,{}
 for f0Cache=0.3e9,2e9,0.425e9 do index=index+1 f0List[index]=f0Cache end
 -- for f0Cache=1.490e9,2e9,0.17e9 do index=index+1 f0List[index]=f0Cache end
-fekoDir=[[E:\ZM\0Work\3simuModel\20200523GaussModel\]]
-stepDir = [[E:\ZM\0Work\3simuModel\20200416simlationModel\]]
+fekoDir=[[D:\LiGuanya\1Feko\20200523GaussModel\]]
+stepDir = [[D:\LiGuanya\1Feko\0lua\]]
 stepName=[[1pWedge(1000_100_500)]]
-gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve20200522211106.txt]]
+gaussFormulaTxt=[[D:\LiGuanya\1Feko\0lua\GaussCurve(16)20200529_172254.txt]]
+
 -- stepName = "wedge45(1000_250_500)" --*.step
 -- stepName="test"
 count,nLoops,gaussIndex=0,#PAList*#f0List,0
@@ -143,6 +145,12 @@ for i = 1,#geo1.Faces do
     faceProperties.IntegralEquation = cf.Enums.IntegralEquationTypeEnum.CombinedField
     FaceA:SetProperties(faceProperties)
 end
+-- Paralel ProcessCount 
+CompLaunchOpt = prj.Launcher.Settings
+launchPprty = CompLaunchOpt:GetProperties()
+launchPprty.FEKO.Parallel.NumberOfProcessesEnabled = true
+launchPprty.FEKO.Parallel.ProcessCount = nParaProcess
+CompLaunchOpt:SetProperties(launchPprty)
 end
 for indexF0,f0 in ipairs(f0List) do
 -- Solution settings modified
