@@ -9,13 +9,8 @@ for f0Cache=0.3e9,2e9,0.425e9 do index=index+1 f0List[index]=f0Cache end
 fekoDir=[[D:\LiGuanya\1Feko\20200523GaussModel\]]
 stepDir = [[D:\LiGuanya\1Feko\0lua\]]
 stepName=[[1pWedge(1000_100_500)]]
-<<<<<<< HEAD
---gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve20200522211106.txt]]
-gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve20200529135327.txt]]
-=======
 gaussFormulaTxt=[[D:\LiGuanya\1Feko\0lua\GaussCurve(16)20200529_172254.txt]]
 
->>>>>>> bd4a1380b099cb72a4bb7716cdb024787853a87a
 -- stepName = "wedge45(1000_250_500)" --*.step
 -- stepName="test"
 count,nLoops,gaussIndex=0,#PAList*#f0List,0
