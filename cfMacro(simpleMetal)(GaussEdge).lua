@@ -1,16 +1,18 @@
-nParaProcess=4 --parallel processes
-phi1,phi2,phiStep=0,90,10
-theta1,theta2,thetaStep=0,90,10
+nParaProcess=10 --parallel processes
+phi1,phi2,phiStep=0,0,10
+theta1,theta2,thetaStep=90,90,10
 samplesN=(phi2-phi1)/phiStep*(theta2-theta1)/thetaStep
 PAList={0,90}--PolarisationAngle,0 for VV, 90 for HH 
 index,f0List=0,{}
 for f0Cache=0.3e9,2e9,0.425e9 do index=index+1 f0List[index]=f0Cache end
 -- for f0Cache=1.490e9,2e9,0.17e9 do index=index+1 f0List[index]=f0Cache end
-fekoDir=[[D:\LiGuanya\1Feko\20200523GaussModel\]]
-stepDir = [[D:\LiGuanya\1Feko\0lua\]]
+fekoDir=[[E:\ZM\0Work\3simuModel\20200523GaussModel\]]
+stepDir = [[E:\ZM\0Work\3simuModel\20200416simlationModel\]]
 stepName=[[1pWedge(1000_100_500)]]
-gaussFormulaTxt=[[D:\LiGuanya\1Feko\0lua\GaussCurve(16)20200529_172254.txt]]
-
+gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve(16)20200529_172254.txt]]
+gaussStartIndex=1
+countStart=1
+countStartFlag=0
 -- stepName = "wedge45(1000_250_500)" --*.step
 -- stepName="test"
 count,nLoops,gaussIndex=0,#PAList*#f0List,0
@@ -27,6 +29,7 @@ timeScript0=os.time()
 while(line1) do
 time0=os.time()
 gaussIndex=gaussIndex+1
+if gaussIndex>=gaussStartIndex then
 count=0
 if(1) then --initialize feko and create model
 -- CADFEKO v2019.1-353059 (x64)
@@ -182,6 +185,10 @@ end
 PwPprty.PolarisationAngle = PA
 PlaneWaveSource1:SetProperties(PwPprty)
 count=count+1
+if not countStartFlag then
+if count==countStart then countStartFlag=1 end
+end
+if countStartFlag then 
 fileName = stepName..line1..string.format("(Fre%gM_phi%dto%d_theta%dto%d_Pol%d)",f0/(1e6),phi1,phi2,theta1,theta2,PA)
 print(count.." of "..nLoops..string.format(" GaussIndex=%d ",gaussIndex)..fileName..".cfx :")
 print("\tTriangles: "..triangleCount)
@@ -226,10 +233,18 @@ print(resultStr..elapTime)
 print("")
 end
 end
+end
 time3=os.time()
 dtime03_sec=time3-time0
 print("Current Model takes: "..string.format("%f min (%d sec or %f h)",dtime03_sec/60,dtime03_sec,dtime03_sec/3600))
 line1=lineX()
+else
+line1=lineX()
+line1=lineX()
+line1=lineX()
+line1=lineX()
+end
+-- print(line1)
 end
 timeScript1=os.time()
 dTimeScript=timeScript1-timeScript0
