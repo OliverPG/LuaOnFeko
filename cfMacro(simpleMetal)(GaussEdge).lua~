@@ -91,109 +91,108 @@ while(line1) do
                 if countStartFlag then
                     fileName = stepName..line1..string.format("(Fre%gM_phi%dto%ddphi%d_theta%dto%ddtheta%d_Pol%d)",f0/(1e6),phi1,phi2,phiStep,theta1,theta2,thetaStep,PA)
                     if PA==PAList[1] then
-                   	 -- New project
-                   	 app = cf.GetApplication()
-                   	 prj = app:NewProject()	
-                   	 -- Modified solution entity: Model unit
-                   	 prjPprty = prj:GetProperties()
-                   	 prjPprty.ModelAttributes.Unit = cf.Enums.ModelUnitEnum.Millimetres
-                   	 prj:SetProperties(prjPprty)	
-                   	 -- Scale factor changed from 1 to 0.001
-                   	 prj.ModelAttributes.ExtentsExponent = 5	
-                   	 if(1) then-- Import And Create Gaussian head and union
-                   	 GeometryImporter = prj.Importer.Geometry
-                   	 GeometryImporter:SetProperties(importPprty)
-                   	 importBodies=GeometryImporter:Import(stepDir..stepName..[[.STEP]])
-                   	 -- Created geometry: arbitrary curve "AnalyticalCurve1"
-                   	 curvePprty = cf.AnalyticalCurve.GetDefaultProperties()
-                   	 curvePprty.CartesianDescription.U = line2
-                   	 curvePprty.CartesianDescription.V = line3
-                   	 curvePprty.CartesianDescription.N = line4
-                   	 curvePprty.Label = "GaussianCurve"..line1Name
-                   	 curvePprty.ParametricStart = "0"
-                   	 curvePprty.ParametricEnd = L
-                   	 AnalyticalCurve1 = prj.Geometry:AddAnalyticalCurve(curvePprty)
-                   	 -- Add translate transform
-                   	 transPprty = cf.Translate.GetDefaultProperties()
-                   	 transPprty.From.U = "0"
-                   	 transPprty.From.V = "0"
-                   	 transPprty.From.N = "0"
-                   	 transPprty.To.U = "0"
-                   	 transPprty.To.V = "0"
-                   	 transPprty.To.N = "250"
-                   	 Translate2 = AnalyticalCurve1.Transforms:AddTranslate(transPprty)
-                   	 -- Add a copy and mirror transform
-                   	 mirrorPprty = cf.Mirror.GetDefaultProperties()
-                   	 mirrorPprty.Origin.N = "0"
-                   	 mirrorPprty.Origin.U = "0"
-                   	 mirrorPprty.Origin.V = "0"
-                   	 mirrorPprty.Plane = cf.Enums.MirrorPlaneEnum.UV --UV UN VN
-                   	 mirrorPprty.RotationU = "0"
-                   	 mirrorPprty.RotationV = "0"
-                   	 newCurve=AnalyticalCurve1:CopyAndMirror(mirrorPprty)
-                   	 -- Created geometry: loft 
-                   	 loftPprty = cf.Loft.GetDefaultProperties()
-                   	 loftPprty.Label = "gaussFace"
-                   	 gaussFace=prj.Geometry:Loft(newCurve,AnalyticalCurve1,loftPprty)
-                   	 -- Created geometry: sweep "Sweep1"
-                   	 sweepPprty = cf.Sweep.GetDefaultProperties()
-                   	 sweepPprty.To.V = "1000"
-                   	 -- Loft1 = project.Geometry["Loft1"]
-                   	 gaussHead=prj.Geometry:Sweep(gaussFace, sweepPprty)
-                   	 -- Created geometry: union "Union1"
-                   	 --wedge = prj.Geometry["1pWedge_1000_250_500_"]
-                   	 targets=importBodies
-                   	 table.insert(targets,gaussHead)
-                   	 unionBody=prj.Geometry:Union(targets)
-                   	 View3D = app.Views["3D view 1"]
-                   	 View3D:SetViewDirection(cf.Enums.ViewDirectionEnum.Isometric)
-                   	 View3D:ZoomToExtents()
-                   	 end --Model Created End
-                   	 for i = 1,#unionBody.Faces do
-                   	     FaceA = unionBody.Faces[i]
-                   	     faceProperties = FaceA:GetProperties()
-                   	     faceProperties.IntegralEquation = cf.Enums.IntegralEquationTypeEnum.CombinedField
-                   	     FaceA:SetProperties(faceProperties)
-                   	 end
-                   	 -- Set the frequency to single frequency.
-                   	 StandardConfiguration1 = prj.SolutionConfigurations["StandardConfiguration1"]
-                   	 FrequencyRange1 = StandardConfiguration1.Frequency
-                   	 frqPprty = FrequencyRange1:GetProperties()
-                   	 frqPprty.Start = f0
-                   	 FrequencyRange1:SetProperties(frqPprty)                	
-                         -- Set PlaneWaveSource
-                         PwPprty.PolarisationAngle = PA
-                         PlaneWaveSource1 = prj.SolutionConfigurations["StandardConfiguration1"].Sources:AddPlaneWave(PwPprty)
-                   	 -- PlaneWaveSource1:SetProperties(PwPprty)
-                   	 FarField1 = prj.SolutionConfigurations["StandardConfiguration1"].FarFields:Add(farfieldPprty)
-                   	 -- Solution settings
-                   	 SolverSettings_1 = prj.SolutionSettings.SolverSettings
-                   	 solutionProperties = SolverSettings_1:GetProperties()
-                   	 solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.MLFMM
-                   	     -- solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.None
-                   	 SolverSettings_1:SetProperties(solutionProperties)
-                   	 -- Paralel ProcessCount 
-                   	 CompLaunchOpt = prj.Launcher.Settings
-                   	 launchPprty = CompLaunchOpt:GetProperties()
-                   	 launchPprty.FEKO.Parallel.NumberOfProcessesEnabled = true
-                   	 launchPprty.FEKO.Parallel.ProcessCount = nParaProcess
-                   	 CompLaunchOpt:SetProperties(launchPprty)                
-                   	 -- Mesh the model
-                   	 MeshSettings = prj.Mesher.Settings
-                   	 MeshSettings.MeshSizeOption=cf.Enums.MeshSizeOptionEnum.Standard	
-                   	 proMesh=prj.Mesher:Mesh()
-                    end -- The first polarization executing part End
+                    -- New project
+                    app = cf.GetApplication()
+                    prj = app:NewProject()	
+                    -- Modified solution entity: Model unit
+                    prjPprty = prj:GetProperties()
+                    prjPprty.ModelAttributes.Unit = cf.Enums.ModelUnitEnum.Millimetres
+                    prj:SetProperties(prjPprty)	
+                    -- Scale factor changed from 1 to 0.001
+                    prj.ModelAttributes.ExtentsExponent = 5	
+                    if(1) then-- Import And Create Gaussian head and union
+                    GeometryImporter = prj.Importer.Geometry
+                    GeometryImporter:SetProperties(importPprty)
+                    importBodies=GeometryImporter:Import(stepDir..stepName..[[.STEP]])
+                    -- Created geometry: arbitrary curve "AnalyticalCurve1"
+                    curvePprty = cf.AnalyticalCurve.GetDefaultProperties()
+                    curvePprty.CartesianDescription.U = line2
+                    curvePprty.CartesianDescription.V = line3
+                    curvePprty.CartesianDescription.N = line4
+                    curvePprty.Label = "GaussianCurve"..line1Name
+                    curvePprty.ParametricStart = "0"
+                    curvePprty.ParametricEnd = L
+                    AnalyticalCurve1 = prj.Geometry:AddAnalyticalCurve(curvePprty)
+                    -- Add translate transform
+                    transPprty = cf.Translate.GetDefaultProperties()
+                    transPprty.From.U = "0"
+                    transPprty.From.V = "0"
+                    transPprty.From.N = "0"
+                    transPprty.To.U = "0"
+                    transPprty.To.V = "0"
+                    transPprty.To.N = "250"
+                    Translate2 = AnalyticalCurve1.Transforms:AddTranslate(transPprty)
+                    -- Add a copy and mirror transform
+                    mirrorPprty = cf.Mirror.GetDefaultProperties()
+                    mirrorPprty.Origin.N = "0"
+                    mirrorPprty.Origin.U = "0"
+                    mirrorPprty.Origin.V = "0"
+                    mirrorPprty.Plane = cf.Enums.MirrorPlaneEnum.UV --UV UN VN
+                    mirrorPprty.RotationU = "0"
+                    mirrorPprty.RotationV = "0"
+                    newCurve=AnalyticalCurve1:CopyAndMirror(mirrorPprty)
+                    -- Created geometry: loft 
+                    loftPprty = cf.Loft.GetDefaultProperties()
+                    loftPprty.Label = "gaussFace"
+                    gaussFace=prj.Geometry:Loft(newCurve,AnalyticalCurve1,loftPprty)
+                    -- Created geometry: sweep "Sweep1"
+                    sweepPprty = cf.Sweep.GetDefaultProperties()
+                    sweepPprty.To.V = "1000"
+                    -- Loft1 = project.Geometry["Loft1"]
+                    gaussHead=prj.Geometry:Sweep(gaussFace, sweepPprty)
+                    -- Created geometry: union "Union1"
+                    --wedge = prj.Geometry["1pWedge_1000_250_500_"]
+                    targets=importBodies
+                    table.insert(targets,gaussHead)
+                    unionBody=prj.Geometry:Union(targets)
+                    View3D = app.Views["3D view 1"]
+                    View3D:SetViewDirection(cf.Enums.ViewDirectionEnum.Isometric)
+                    View3D:ZoomToExtents()
+                    end --Model Created End
+                    for i = 1,#unionBody.Faces do
+                        FaceA = unionBody.Faces[i]
+                        faceProperties = FaceA:GetProperties()
+                        faceProperties.IntegralEquation = cf.Enums.IntegralEquationTypeEnum.CombinedField
+                        FaceA:SetProperties(faceProperties)
+                    end
+                    -- Set the frequency to single frequency.
+                    StandardConfiguration1 = prj.SolutionConfigurations["StandardConfiguration1"]
+                    FrequencyRange1 = StandardConfiguration1.Frequency
+                    frqPprty = FrequencyRange1:GetProperties()
+                    frqPprty.Start = f0
+                    FrequencyRange1:SetProperties(frqPprty)
+                    -- PlaneWaveSource1:SetProperties(PwPprty)
+                    FarField1 = prj.SolutionConfigurations["StandardConfiguration1"].FarFields:Add(farfieldPprty)
+                    -- Solution settings
+                    SolverSettings_1 = prj.SolutionSettings.SolverSettings
+                    solutionProperties = SolverSettings_1:GetProperties()
+                    solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.MLFMM
+                        -- solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.None
+                    SolverSettings_1:SetProperties(solutionProperties)
+                    -- Paralel ProcessCount 
+                    CompLaunchOpt = prj.Launcher.Settings
+                    launchPprty = CompLaunchOpt:GetProperties()
+                    launchPprty.FEKO.Parallel.NumberOfProcessesEnabled = true
+                    launchPprty.FEKO.Parallel.ProcessCount = nParaProcess
+                    CompLaunchOpt:SetProperties(launchPprty)                
+                    -- Mesh the model
+                    MeshSettings = prj.Mesher.Settings
+                    MeshSettings.MeshSizeOption=cf.Enums.MeshSizeOptionEnum.Standard	
+                    proMesh=prj.Mesher:Mesh()
+                    end -- The first polarization executing part End                  	
+                    -- Set PlaneWaveSource
                     PwPprty.PolarisationAngle = PA
-                    PlaneWaveSource1:SetProperties(PwPprty)  		
-                    -- Save project
-                    app:SaveAs(outFekoDir..fileName)
-                    triangleCount = unionBody.SimulationMeshInfo.TriangleCount                    
-                    indexNote=1
+                    PlaneWaveSource1 = prj.SolutionConfigurations["StandardConfiguration1"].Sources:AddPlaneWave(PwPprty)
+                    triangleCount = unionBody.SimulationMeshInfo.TriangleCount
+                    indexNote=0
+                    indexNote=indexNote+1
                     stringNote[indexNote]=count.." of "..nLoops..string.format(" GaussIndex=%d ",gaussIndex)..fileName..".cfx :"
                     print(stringNote[indexNote])
                     indexNote=indexNote+1
                     stringNote[indexNote]="\tTriangles: "..triangleCount
-                    print(stringNote[indexNote])
+                    print(stringNote[indexNote])		
+                    -- Save project
+                    app:SaveAs(outFekoDir..fileName)
                     -- RunFEKO
                     errTimes,skipFlag=0,0
                     repeat
@@ -227,9 +226,9 @@ while(line1) do
                     stringNote[indexNote]=resultStr..elapTime   
                     print(stringNote[indexNote])
                     for indexNot=1,#stringNote do logFileHd:write(stringNote[indexNot]) end
-                end -- countStartFlag End
-            end -- PAList End
-        end -- f0List End
+                end
+            end
+        end
         time3=os.time()
         dtime03_sec=time3-time0
         modelStr="Current Model takes: "..string.format("%f min (%d sec or %f h)",dtime03_sec/60,dtime03_sec,dtime03_sec/3600)
@@ -241,8 +240,8 @@ while(line1) do
         line1=lineX()
         line1=lineX()
         line1=lineX()
-    end -- gaussIndex>=gaussStartIndex End
-end --while End
+    end
+end
 timeScript1=os.time()
 dTimeScript=timeScript1-timeScript0
 strTotal="Script Running Time: "..string.format("%f min (%d sec or %f h)",dTimeScript/60,dTimeScript,dTimeScript/3600)
