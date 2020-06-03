@@ -1,17 +1,19 @@
 nParaProcess=2 --parallel processes
 phi1,phi2,phiStep=0,0,10
 theta1,theta2,thetaStep=90,90,10
-f1,f2,fStep=0.3e9,2e9,0.425e9 --1.490e9,2e9,0.17e9
+-- f1,f2,fStep=0.3e9,2e9,0.425e9 --1.490e9,2e9,0.17e9
+f1,f2,fStep=0.4e9,0.4e9,0.425e9 --1.490e9,2e9,0.17e9
 PAList={0,90}--PolarisationAngle,0 for VV, 90 for HH 
 fekoDir=[[E:\ZM\0Work\3simuModel\20200523GaussModel\]]
 stepDir = [[E:\ZM\0Work\3simuModel\20200416simlationModel\]]
 -- stepName=[[1pWedge(1000_100_500)]]
 stepName=[[test]]
-gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve(16)20200529_172254.txt]]
+gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurveTest.txt]]
 gaussStartIndex,countStart=1,1
 -----------------------------------------------------------------------------------------------------------------------
 index,f0List=0,{}
 for f0Cache=f1,f2,fStep do index=index+1 f0List[index]=f0Cache end
+f0Last=-1
 samplesN=(phi2-phi1)/phiStep*(theta2-theta1)/thetaStep
 countStartFlag=false
 formulaTxtName=gaussFormulaTxt:sub(-gaussFormulaTxt:reverse():find([[\]])+1,-gaussFormulaTxt:reverse():find([[%.]])-1)
@@ -29,7 +31,7 @@ stringNote={}
 --PlaneWave     PW
 --frequency     frq
  if(1) then --initialize feko and create model	
-    -- Import Geometry
+    -- Set base import parameters
     importPprty = {}
     importPprty.AutoMergeWires = false
     importPprty.AutoStitchFaces = false
@@ -41,10 +43,7 @@ stringNote={}
     importPprty.StitchTrimmedFacesEnabled = true
     importPprty.UseInfinitelyThinLayersEnabled = true
     importPprty.UseTwoStepImportEnabled = false
-    --GeometryImporter = prj.Importer.Geometry
-    --GeometryImporter:SetProperties(importPprty)
-    --importBodies=GeometryImporter:Import(stepDir..stepName..[[.STEP]])
-    --Created solution entity: PlaneWaveSource1
+    -- Set base parameters for PlaneWaveSource
     PwPprty = cf.PlaneWave.GetDefaultProperties()
     PwPprty.DefinitionMethod = cf.Enums.PlaneWaveDefinitionMethodEnum.Multiple
     PwPprty.Label = "PlaneWaveSource1"
@@ -54,14 +53,11 @@ stringNote={}
     PwPprty.EndTheta = theta2
     PwPprty.PhiIncrement = phiStep
     PwPprty.ThetaIncrement = thetaStep
-    -- 	PwPprty.PolarisationAngle = 0 --0 for VV, 90 for HH
-    -- 	PlaneWaveSource1 = prj.SolutionConfigurations["StandardConfiguration1"].Sources:AddPlaneWave(PwPprty)	
-    --  Created solution entity: FarField1
+    --  Set base Farfield request parameters
     farfieldPprty = cf.FarField.GetDefaultProperties()
     farfieldPprty.CalculationDirection = cf.Enums.FarFieldCalculationDirectionEnum.FromPlaneWave
     farfieldPprty.Label = "FarField1"
     farfieldPprty.Advanced.ExportSettings.ASCIIEnabled = true --export *.ffe
-    -- 	FarField1 = prj.SolutionConfigurations["StandardConfiguration1"].FarFields:Add(farfieldPprty)	
 end
 lineX=io.lines(gaussFormulaTxt)
 line1=lineX()
@@ -71,16 +67,6 @@ while(line1) do
     gaussIndex=gaussIndex+1
     if gaussIndex>=gaussStartIndex then
         count=0
-        line1Name=line1:gsub('-','N')
-        line1Name=line1Name:gsub("%.","p")
-        line1Name=line1Name:gsub("[(,)]","_")
-        line2=lineX()
-        line3=lineX()
-        line4=lineX()
-        L=line1:sub(line1:find('L')+1,line1:find('H')-1)
-        H=line1:sub(line1:find('H')+1,line1:find('A1')-1)
-        A1=line1:sub(line1:find('A1')+2,line1:find('A2')-1)
-        A2=line1:sub(line1:find('A2')+2,-2)
         for indexF0,f0 in ipairs(f0List) do	
             time1=os.time()	
             for indexPA,PA in ipairs(PAList) do
@@ -88,12 +74,14 @@ while(line1) do
 		if not countStartFlag then
                     if count==countStart then countStartFlag=true end
 		end
-                if countStartFlag then
+                if countStartFlag then -- If it is or after (gaussIndex==gaussStartIndex,count==countStart)
                     fileName = stepName..line1..string.format("(Fre%gM_phi%dto%ddphi%d_theta%dto%ddtheta%d_Pol%d)",f0/(1e6),phi1,phi2,phiStep,theta1,theta2,thetaStep,PA)
-                    if PA==PAList[1] then
+                    if count==1 or (gaussIndex==gaussStartIndex and count==countStart) then -- If it's the first f0-PA Sample Point for current model or It's the first run from countStart
                    	 -- New project
                    	 app = cf.GetApplication()
                    	 prj = app:NewProject()	
+                         -- Save project as
+                         app:SaveAs(outFekoDir..fileName)
                    	 -- Modified solution entity: Model unit
                    	 prjPprty = prj:GetProperties()
                    	 prjPprty.ModelAttributes.Unit = cf.Enums.ModelUnitEnum.Millimetres
@@ -104,7 +92,18 @@ while(line1) do
                    	 GeometryImporter = prj.Importer.Geometry
                    	 GeometryImporter:SetProperties(importPprty)
                    	 importBodies=GeometryImporter:Import(stepDir..stepName..[[.STEP]])
-                   	 -- Created geometry: arbitrary curve "AnalyticalCurve1"
+                         -- Get Gauss Parameters from formula txt
+                         line1Name=line1:gsub('-','N')
+                         line1Name=line1Name:gsub("%.","p")
+                         line1Name=line1Name:gsub("[(,)]","_")
+                         line2=lineX()
+                         line3=lineX()
+                         line4=lineX()
+                         L=line1:sub(line1:find('L')+1,line1:find('H')-1)
+                         H=line1:sub(line1:find('H')+1,line1:find('A1')-1)
+                         A1=line1:sub(line1:find('A1')+2,line1:find('A2')-1)
+                         A2=line1:sub(line1:find('A2')+2,-2)
+                   	 -- Created GaussianCurve
                    	 curvePprty = cf.AnalyticalCurve.GetDefaultProperties()
                    	 curvePprty.CartesianDescription.U = line2
                    	 curvePprty.CartesianDescription.V = line3
@@ -113,7 +112,7 @@ while(line1) do
                    	 curvePprty.ParametricStart = "0"
                    	 curvePprty.ParametricEnd = L
                    	 AnalyticalCurve1 = prj.Geometry:AddAnalyticalCurve(curvePprty)
-                   	 -- Add translate transform
+                   	 -- Translate transform GaussianCurve
                    	 transPprty = cf.Translate.GetDefaultProperties()
                    	 transPprty.From.U = "0"
                    	 transPprty.From.V = "0"
@@ -122,7 +121,7 @@ while(line1) do
                    	 transPprty.To.V = "0"
                    	 transPprty.To.N = "250"
                    	 Translate2 = AnalyticalCurve1.Transforms:AddTranslate(transPprty)
-                   	 -- Add a copy and mirror transform
+                   	 -- Copy and mirror transform GaussianCurve
                    	 mirrorPprty = cf.Mirror.GetDefaultProperties()
                    	 mirrorPprty.Origin.N = "0"
                    	 mirrorPprty.Origin.U = "0"
@@ -131,63 +130,66 @@ while(line1) do
                    	 mirrorPprty.RotationU = "0"
                    	 mirrorPprty.RotationV = "0"
                    	 newCurve=AnalyticalCurve1:CopyAndMirror(mirrorPprty)
-                   	 -- Created geometry: loft 
+                   	 -- Loft GaussianCurve to one Face
                    	 loftPprty = cf.Loft.GetDefaultProperties()
                    	 loftPprty.Label = "gaussFace"
                    	 gaussFace=prj.Geometry:Loft(newCurve,AnalyticalCurve1,loftPprty)
-                   	 -- Created geometry: sweep "Sweep1"
+                   	 -- Sweep Gauss Face to a body
                    	 sweepPprty = cf.Sweep.GetDefaultProperties()
                    	 sweepPprty.To.V = "1000"
-                   	 -- Loft1 = project.Geometry["Loft1"]
                    	 gaussHead=prj.Geometry:Sweep(gaussFace, sweepPprty)
-                   	 -- Created geometry: union "Union1"
-                   	 --wedge = prj.Geometry["1pWedge_1000_250_500_"]
+                   	 -- Union import bodys and GaussBody
                    	 targets=importBodies
                    	 table.insert(targets,gaussHead)
                    	 unionBody=prj.Geometry:Union(targets)
                    	 View3D = app.Views["3D view 1"]
                    	 View3D:SetViewDirection(cf.Enums.ViewDirectionEnum.Isometric)
                    	 View3D:ZoomToExtents()
-                   	 end --Model Created End
-                   	 for i = 1,#unionBody.Faces do
+                   	 end -- Import And Create Gaussian head End
+                   	 for i = 1,#unionBody.Faces do --Set CombinedField IntegralEquation
                    	     FaceA = unionBody.Faces[i]
                    	     faceProperties = FaceA:GetProperties()
                    	     faceProperties.IntegralEquation = cf.Enums.IntegralEquationTypeEnum.CombinedField
                    	     FaceA:SetProperties(faceProperties)
                    	 end
-                   	 -- Set the frequency to single frequency.
-                   	 StandardConfiguration1 = prj.SolutionConfigurations["StandardConfiguration1"]
-                   	 FrequencyRange1 = StandardConfiguration1.Frequency
-                   	 frqPprty = FrequencyRange1:GetProperties()
-                   	 frqPprty.Start = f0
-                   	 FrequencyRange1:SetProperties(frqPprty)                	
-                         -- Set PlaneWaveSource
+                   	 -- Set PlaneWaveSource
                          PwPprty.PolarisationAngle = PA
                          PlaneWaveSource1 = prj.SolutionConfigurations["StandardConfiguration1"].Sources:AddPlaneWave(PwPprty)
                    	 -- PlaneWaveSource1:SetProperties(PwPprty)
                    	 FarField1 = prj.SolutionConfigurations["StandardConfiguration1"].FarFields:Add(farfieldPprty)
-                   	 -- Solution settings
-                   	 SolverSettings_1 = prj.SolutionSettings.SolverSettings
-                   	 solutionProperties = SolverSettings_1:GetProperties()
-                   	 solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.MLFMM
-                   	     -- solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.None
-                   	 SolverSettings_1:SetProperties(solutionProperties)
                    	 -- Paralel ProcessCount 
                    	 CompLaunchOpt = prj.Launcher.Settings
                    	 launchPprty = CompLaunchOpt:GetProperties()
                    	 launchPprty.FEKO.Parallel.NumberOfProcessesEnabled = true
                    	 launchPprty.FEKO.Parallel.ProcessCount = nParaProcess
-                   	 CompLaunchOpt:SetProperties(launchPprty)                
-                   	 -- Mesh the model
-                   	 MeshSettings = prj.Mesher.Settings
-                   	 MeshSettings.MeshSizeOption=cf.Enums.MeshSizeOptionEnum.Standard	
-                   	 proMesh=prj.Mesher:Mesh()
-                    end -- The first polarization executing part End
-                    PwPprty.PolarisationAngle = PA
-                    PlaneWaveSource1:SetProperties(PwPprty)  		
-                    -- Save project
-                    app:SaveAs(outFekoDir..fileName)
-                    triangleCount = unionBody.SimulationMeshInfo.TriangleCount                    
+                   	 CompLaunchOpt:SetProperties(launchPprty)  
+                    else -- If it's not the first f0-PA Sample Point for current model
+                         -- Save project as
+                         app:SaveAs(outFekoDir..fileName)                	
+                         -- Set PlaneWaveSource   
+                         PwPprty.PolarisationAngle = PA
+                         PlaneWaveSource1:SetProperties(PwPprty)
+                    end -- The first f0-PA Sample Point Part End
+                    if f0~=f0Last then -- If the frequency is changed
+                        -- Solution settings
+                        SolverSettings_1 = prj.SolutionSettings.SolverSettings
+                        solutionProperties = SolverSettings_1:GetProperties()
+                        solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.MLFMM
+                        -- solutionProperties.MLFMMACASettings.ModelSolutionSolveType = cf.Enums.ModelSolutionSolveTypeEnum.None
+                        SolverSettings_1:SetProperties(solutionProperties)
+                        -- Set the frequency to single frequency.
+                        StandardConfiguration1 = prj.SolutionConfigurations["StandardConfiguration1"]
+                        FrequencyRange1 = StandardConfiguration1.Frequency
+                        frqPprty = FrequencyRange1:GetProperties()
+                        frqPprty.Start = f0
+                        FrequencyRange1:SetProperties(frqPprty) 
+                        -- Mesh the model
+                        MeshSettings = prj.Mesher.Settings
+                        MeshSettings.MeshSizeOption=cf.Enums.MeshSizeOptionEnum.Standard	
+                        proMesh=prj.Mesher:Mesh() 
+                    end
+                    geo=prj.Geometry[1]
+                    triangleCount = geo.SimulationMeshInfo.TriangleCount                    
                     indexNote=1
                     stringNote[indexNote]=count.." of "..nLoops..string.format(" GaussIndex=%d ",gaussIndex)..fileName..".cfx :"
                     print(stringNote[indexNote])
@@ -219,6 +221,7 @@ while(line1) do
 			end
                     until(result.Succeeded==true or errTimes>1)
                     app:Save()
+                    f0Last=f0
                     time2=os.time()
                     dtime12_sec=(time2-time1)
                     elapTime="Elapsed time: "..string.format("%f min (%d sec or %f h)",dtime12_sec/60,dtime12_sec,dtime12_sec/3600)
