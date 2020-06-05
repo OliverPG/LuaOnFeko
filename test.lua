@@ -1,4 +1,8 @@
-dir1=[[E:\ZM\E]]
-print(dir1)
-mkdir1Str="md "..dir1
-os.execute(mkdir1Str)
+
+feko = cf or pf
+form = feko.Form.New("Demonstration")
+label = feko.FormLabel.New("Hello world!")
+form:Add(label)
+form:Run()
+-- app=cf.GetApplication()
+-- app:NewProject()
