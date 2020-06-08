@@ -98,7 +98,11 @@ for indexF0,f0 in ipairs(f0List) do
                  app:SaveAs(fekoDir..fileName)                	
                  -- Set PlaneWaveSource   
                  PwPprty.PolarisationAngle = PA
-                 PlaneWaveSource1[1]:SetProperties(PwPprty)
+                 if PlaneWaveSource1[1]~=nil then
+                    PlaneWaveSource1[1]:SetProperties(PwPprty)
+                 else
+                    PlaneWaveSource1:SetProperties(PwPprty)
+                 end
             end -- The first run or not End
             if f0~=f0Last then
            	-- Solution settings
