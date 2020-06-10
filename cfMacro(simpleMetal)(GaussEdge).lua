@@ -1,7 +1,8 @@
 nParaProcess=8 --parallel processes
 phi1,phi2,phiStep=0,90,10
 theta1,theta2,thetaStep=0,90,10
-f1,f2,fStep=0.3e9,2e9,0.425e9 --1.490e9,2e9,0.17e9
+-- f1,f2,fStep=0.3e9,2e9,0.425e9 --1.490e9,2e9,0.17e9
+f0List={470000000,640000000.000000,810000000,980000000,1320000000.00000,1490000000.00000,1660000000.00000,1830000000.00000}
 -- f1,f2,fStep=0.4e9,0.4e9,0.425e9 --1.490e9,2e9,0.17e9
 PAList={0,90}--PolarisationAngle,0 for VV, 90 for HH 
 fekoDir=[[E:\ZM\0Work\3simuModel\20200523GaussModel\]]
@@ -11,8 +12,10 @@ stepName=[[1pWedge(1000_100_500)]]
 gaussFormulaTxt=[[E:\ZM\0Work\1SimulationReport\CurveCalculation\GaussianStructure\GaussCurve(40)20200601.txt]]
 gaussStartIndex,countStart=1,1
 -----------------------------------------------------------------------------------------------------------------------
-index,f0List=0,{}
-for f0Cache=f1,f2,fStep do index=index+1 f0List[index]=f0Cache end
+if f0List==nil then
+    index,f0List=0,{}
+    for f0Cache=f1,f2,fStep do index=index+1 f0List[index]=f0Cache end
+end
 f0Last=-1
 samplesN=(phi2-phi1)/phiStep*(theta2-theta1)/thetaStep
 countStartFlag=false
