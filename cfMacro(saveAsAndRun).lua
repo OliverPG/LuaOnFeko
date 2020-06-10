@@ -1,11 +1,11 @@
-nParaProcess=6 --parallel processes
-phi1,phi2,phiStep=0,180,1
-theta1,theta2,thetaStep=85,100,5
+nParaProcess=8 --parallel processes
+phi1,phi2,phiStep=0,90,5
+theta1,theta2,thetaStep=0,90,5
 -- f1,f2,fStep=0.3e9,2e9,0.425e9 --1.490e9,2e9,0.17e9
-f1,f2,fStep=0.3e9,4e9,0.4625e9 --1.490e9,2e9,0.17e9
+f1,f2,fStep=0.3e9,2e9,0.4625e9 --1.490e9,2e9,0.17e9
 PAList={0,90}--PolarisationAngle,0 for VV, 90 for HH 
-fekoDir=[[D:\LiGuanya\1Feko\2020hengxiang\3WedgeGradientMeds\]] --Where the New Cfx save in
-cfxFile = [[D:\LiGuanya\1Feko\2020hengxiang\3WedgeGradientMeds.cfx]] -- which Cfx as initial file 
+fekoDir=[[E:\ZM\0Work\3simuModel\20200416simlationModel\1pWedge(1000_100_500)\]] --Where the New Cfx save in
+cfxFile = [[E:\ZM\0Work\3simuModel\20200416simlationModel\1pWedge(1000_100_500).cfx]] -- which Cfx as initial file 
 countStart=1
 -----------------------------------------------------------------------------------------------------------------------
 index,f0List=0,{}
